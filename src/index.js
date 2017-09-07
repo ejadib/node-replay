@@ -4,6 +4,7 @@
 
 const Catalog           = require('./catalog');
 const Chain             = require('./chain');
+const Matcher = require('./matcher');
 const debug             = require('./debug');
 const { EventEmitter }  = require('events');
 const logger            = require('./logger');
@@ -72,6 +73,7 @@ class Replay extends EventEmitter {
     this._dropped     = new Set();
 
     this.catalog = new Catalog(this);
+    this.matcher = Matcher;
     this.headers = MATCH_HEADERS;
 
     // Automatically emit connection errors and such, also prevent process from crashing
