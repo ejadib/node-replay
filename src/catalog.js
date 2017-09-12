@@ -143,21 +143,27 @@ module.exports = class Catalog {
   }
 
   find(host) {
+    let matcherKey = host;
+
+    if (this.settings.hostSuffix) {
+      matcherKey += `.${this.settings.hostSuffix}`; 
+    }
+
     // Return result from cache.
-    const matchers = this.matchers[host];
+    const matchers = this.matchers[matcherKey];
     if (matchers)
       return matchers;
 
     // Start by looking for directory and loading each of the files.
     // Look for host-port (windows friendly) or host:port (legacy)
-    let pathname = `${this.getFixturesDir()}/${host.replace(':', '-')}`;
+    let pathname = `${this.getFixturesDir()}/${matcherKey.replace(':', '-')}`;
     if (!File.existsSync(pathname))
-      pathname = `${this.getFixturesDir()}/${host}`;
+      pathname = `${this.getFixturesDir()}/${matcherKey}`;
     if (!File.existsSync(pathname))
       return null;
 
-    const newMatchers = this.matchers[host] || [];
-    this.matchers[host] = newMatchers;
+    const newMatchers = this.matchers[matcherKey] || [];
+    this.matchers[matcherKey] = newMatchers;
 
     const stat = File.statSync(pathname);
     if (stat.isDirectory()) {
@@ -175,14 +181,20 @@ module.exports = class Catalog {
   }
 
   save(host, request, response, callback) {
+    let matcherKey = host;
+
+    if (this.settings.hostSuffix) {
+      matcherKey += `.${this.settings.hostSuffix}`; 
+    }
+
     const matcher = Matcher.fromMapping(host, { request, response });
-    const matchers = this.matchers[host] || [];
+    const matchers = this.matchers[matcherKey] || [];
     matchers.push(matcher);
     const requestHeaders = this.settings.headers;
 
     const uid = this.settings.customFileNameHeader ? request.headers[this.settings.customFileNameHeader] : `${ Date.now() }${ Math.floor(Math.random() * 100000) }`;
     const tmpfile   = `${this.getFixturesDir()}/node-replay.${uid}`;
-    const pathname  = `${this.getFixturesDir()}/${host.replace(':', '-')}`;
+    const pathname  = `${this.getFixturesDir()}/${matcherKey.replace(':', '-')}`;
 
     debug(`Creating ${pathname}`);
     try {
